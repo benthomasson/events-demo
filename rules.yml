@@ -1,0 +1,16 @@
+---
+- name: Demo rules
+  hosts: all
+  sources:
+    - name: azure
+      azure:
+        conn_str: "{{CONNECTION_STR}}"
+        queue_name: "{{queue_name}}"
+      transform: jsonify
+  rules:
+    - name: send to slack
+      condition: True
+      action:
+        slack:
+          token: "{{token}}"
+          message: "{{event}}"
