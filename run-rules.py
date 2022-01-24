@@ -3,7 +3,7 @@
 
 """
 Usage:
-    run-rules [options] <rules.yml> <vars.yml>
+    run-rules [options] <rules.yml> <vars.yml> <inventory.yml>
 
 Options:
     -h, --help        Show this page
@@ -47,7 +47,7 @@ def start_sources(sources, variables, queue):
         module.get('main')(queue, args)
 
 
-def run_rules(rules, variables, queue):
+def run_rules(rules, variables, inventory, queue):
 
     while True:
         data = queue.get()
@@ -57,7 +57,7 @@ def run_rules(rules, variables, queue):
         for rule in rules:
             print(rule)
             if rule.condition.value:
-                asyncio.run(run_module(load_inventory('inventory.yml'),
+                asyncio.run(run_module(inventory,
                                        ['modules'],
                                        rule.action.module,
                                        modules=[rule.action.module],
@@ -76,6 +76,7 @@ def main(args=None):
         logging.basicConfig(level=logging.WARNING)
     variables = load_vars(parsed_args)
     rulesets = load_rules(parsed_args)
+    inventory = load_inventory(parsed_args['<inventory.yml>'])
 
     print(variables)
     print(rulesets)
@@ -88,7 +89,7 @@ def main(args=None):
         queue = mp.Queue()
 
         tasks.append(mp.Process(target=start_sources, args=(sources, variables, queue)))
-        tasks.append(mp.Process(target=run_rules, args=(rules, variables, queue,)))
+        tasks.append(mp.Process(target=run_rules, args=(rules, variables, inventory, queue,)))
 
     for task in tasks:
         task.start()
